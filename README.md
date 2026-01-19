@@ -7,19 +7,15 @@
     <style>
         @import url('https://fonts.googleapis.com/css2?family=VT323&display=swap');
 
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
 
         body {
-            background: #008080; /* Windows 95 teal desktop */
+            background: #008080;
             font-family: 'MS Sans Serif', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             font-size: 12px;
             height: 100vh;
             overflow: hidden;
-            image-rendering: pixelated; /* crisp retro feel */
+            image-rendering: pixelated;
             display: flex;
             flex-direction: column;
         }
@@ -33,9 +29,7 @@
             border-top-color: #000;
             border-left-color: #000;
             background: #c0c0c0;
-            box-shadow: 
-                inset 1px 1px 0 #fff, 
-                inset -1px -1px 0 #000;
+            box-shadow: inset 1px 1px 0 #fff, inset -1px -1px 0 #000;
         }
 
         .title-bar {
@@ -48,27 +42,18 @@
             user-select: none;
         }
 
-        .title-bar h1 {
-            font-size: 13px;
-            font-weight: normal;
-        }
+        .title-bar h1 { font-size: 13px; font-weight: normal; }
 
-        .buttons {
-            display: flex;
-            gap: 4px;
-        }
+        .buttons { display: flex; gap: 4px; }
 
         .btn-window {
-            width: 18px;
-            height: 18px;
+            width: 18px; height: 18px;
             background: #c0c0c0;
             border: 1px solid #fff;
             border-bottom-color: #000;
             border-right-color: #000;
-            font-size: 10px;
-            line-height: 16px;
-            text-align: center;
-            cursor: pointer;
+            font-size: 10px; line-height: 16px;
+            text-align: center; cursor: pointer;
         }
 
         .toolbar {
@@ -93,8 +78,7 @@
         }
 
         button, .tool-btn {
-            width: 48px;
-            height: 48px;
+            width: 48px; height: 48px;
             background: #c0c0c0;
             border: 2px solid;
             border-color: #fff #000 #000 #fff;
@@ -116,7 +100,7 @@
             background: 
                 linear-gradient(45deg, #808080 25%, transparent 25%) 0 0 / 16px 16px,
                 linear-gradient(45deg, transparent 75%, #808080 75%) 8px 8px / 16px 16px,
-                #c0c0c0; /* subtle dither */
+                #c0c0c0;
             position: relative;
             border: 2px inset #fff;
             border-top-color: #000;
@@ -145,8 +129,7 @@
         }
 
         .color-swatch {
-            width: 24px;
-            height: 24px;
+            width: 24px; height: 24px;
             border: 2px solid #000;
             cursor: pointer;
         }
@@ -190,6 +173,7 @@
                 <button id="redoBtn" title="Redo">↻</button>
             </div>
             <div class="tool-group">
+                <button id="uploadBtn" title="Upload Image">📁</button>
                 <button id="clearBtn" title="Clear">🗑️</button>
                 <button id="saveBtn" title="Save">💾</button>
             </div>
@@ -198,12 +182,14 @@
             </label>
         </div>
 
+        <!-- Hidden file input for image upload -->
+        <input type="file" id="imageUpload" accept="image/*" style="display:none;">
+
         <div id="canvas-container">
             <canvas id="canvas"></canvas>
         </div>
 
         <div class="color-palette">
-            <!-- Classic Windows 95 / MS Paint 20-color palette -->
             <div class="color-swatch" style="background:#000000;" data-color="#000000"></div>
             <div class="color-swatch" style="background:#808080;" data-color="#808080"></div>
             <div class="color-swatch" style="background:#C0C0C0;" data-color="#C0C0C0"></div>
@@ -227,7 +213,7 @@
         </div>
 
         <div class="status-bar">
-            For Pooja • Retro ZEST Paint • Use mouse or touch to draw
+            For Pooja • Retro ZEST Paint • Upload your photo and doodle over it!
         </div>
     </div>
 
@@ -241,6 +227,8 @@
         const eraserBtn = document.getElementById('eraserBtn');
         const undoBtn = document.getElementById('undoBtn');
         const redoBtn = document.getElementById('redoBtn');
+        const uploadBtn = document.getElementById('uploadBtn');
+        const imageUpload = document.getElementById('imageUpload');
         const clearBtn = document.getElementById('clearBtn');
         const saveBtn = document.getElementById('saveBtn');
 
@@ -309,7 +297,7 @@
             ctx.beginPath();
             ctx.moveTo(x, y);
 
-            if (!isEraser) ctx.strokeStyle = e.target.dataset?.color || '#000000';
+            if (!isEraser) ctx.strokeStyle = e.target?.dataset?.color || '#000000';
             draw(e);
         }
 
@@ -345,32 +333,60 @@
         document.querySelectorAll('.color-swatch').forEach(swatch => {
             swatch.addEventListener('click', (e) => {
                 ctx.strokeStyle = e.target.dataset.color;
-                penBtn.click(); // switch to pen when picking color
+                penBtn.click();
             });
         });
 
         undoBtn.addEventListener('click', () => {
             if (historyIndex > 0) {
                 historyIndex--;
-                const img = new Image();
-                img.src = history[historyIndex];
-                img.onload = () => {
-                    ctx.clearRect(0, 0, canvas.width, canvas.height);
-                    ctx.drawImage(img, 0, 0);
-                };
+                loadHistoryState(history[historyIndex]);
             }
         });
 
         redoBtn.addEventListener('click', () => {
             if (historyIndex < history.length - 1) {
                 historyIndex++;
-                const img = new Image();
-                img.src = history[historyIndex];
-                img.onload = () => {
-                    ctx.clearRect(0, 0, canvas.width, canvas.height);
-                    ctx.drawImage(img, 0, 0);
-                };
+                loadHistoryState(history[historyIndex]);
             }
+        });
+
+        function loadHistoryState(dataUrl) {
+            const img = new Image();
+            img.src = dataUrl;
+            img.onload = () => {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+            };
+        }
+
+        // Upload image
+        uploadBtn.addEventListener('click', () => imageUpload.click());
+
+        imageUpload.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                const img = new Image();
+                img.onload = () => {
+                    ctx.globalCompositeOperation = 'source-over';
+
+                    // Center and scale image to fit canvas (preserve aspect ratio)
+                    const scale = Math.min(canvas.width / img.width, canvas.height / img.height);
+                    const scaledW = img.width * scale;
+                    const scaledH = img.height * scale;
+                    const offsetX = (canvas.width - scaledW) / 2;
+                    const offsetY = (canvas.height - scaledH) / 2;
+
+                    ctx.drawImage(img, offsetX, offsetY, scaledW, scaledH);
+                    saveState(); // Allow undo of the upload
+                };
+                img.src = event.target.result;
+            };
+            reader.readAsDataURL(file);
+            e.target.value = ''; // Reset input for next upload
         });
 
         clearBtn.addEventListener('click', () => {
@@ -390,10 +406,10 @@
             link.click();
         });
 
-        // Start with blank canvas & save initial state
+        // Initialize blank canvas
         ctx.fillStyle = 'white';
         ctx.fillRect(0, 0, canvas.width, canvas.height);
-        ctx.strokeStyle = '#000000'; // default black
+        ctx.strokeStyle = '#000000';
         saveState();
     </script>
 </body>
