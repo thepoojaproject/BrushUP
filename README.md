@@ -1,9 +1,9 @@
-<!DOCTYPE html>
+
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ZEST - Draw & Create</title>
+    <title>Brush Up - Draw & Create</title>
     <style>
         body {
             margin: 0;
@@ -240,4 +240,4 @@
         saveState();
     </script>
 </body>
-</html># BrushUP
+</html>
