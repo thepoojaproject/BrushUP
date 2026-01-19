@@ -3,117 +3,239 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ZEST - Draw & Create</title>
+    <title>ZEST - Retro Paint</title>
     <style>
-        body {
+        @import url('https://fonts.googleapis.com/css2?family=VT323&display=swap');
+
+        * {
+            box-sizing: border-box;
             margin: 0;
-            background: #29825d;
-            font-family: Arial, sans-serif;
-            min-height: 100vh;
+            padding: 0;
+        }
+
+        body {
+            background: #008080; /* Windows 95 teal desktop */
+            font-family: 'MS Sans Serif', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-size: 12px;
+            height: 100vh;
+            overflow: hidden;
+            image-rendering: pixelated; /* crisp retro feel */
             display: flex;
             flex-direction: column;
-            overflow: hidden;
         }
-        header {
-            text-align: center;
+
+        .window {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            margin: 8px;
+            border: 2px solid #dfdfdf;
+            border-top-color: #000;
+            border-left-color: #000;
+            background: #c0c0c0;
+            box-shadow: 
+                inset 1px 1px 0 #fff, 
+                inset -1px -1px 0 #000;
+        }
+
+        .title-bar {
+            background: linear-gradient(to right, #000080, #1084d0);
             color: white;
-            padding: 15px 0 5px;
-            background: rgba(0,0,0,0.15);
+            padding: 3px 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            user-select: none;
         }
-        #logo {
-            max-width: 320px;
-            width: 80%;
-            height: auto;
-            display: block;
-            margin: 0 auto 8px;
-            filter: drop-shadow(0 4px 12px rgba(0,0,0,0.4));
+
+        .title-bar h1 {
+            font-size: 13px;
+            font-weight: normal;
         }
-        #toolbar {
-            background: #ffffff;
-            padding: 12px;
+
+        .buttons {
+            display: flex;
+            gap: 4px;
+        }
+
+        .btn-window {
+            width: 18px;
+            height: 18px;
+            background: #c0c0c0;
+            border: 1px solid #fff;
+            border-bottom-color: #000;
+            border-right-color: #000;
+            font-size: 10px;
+            line-height: 16px;
             text-align: center;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-            z-index: 10;
-            overflow-x: auto;
-            white-space: nowrap;
+            cursor: pointer;
         }
-        #toolbar label {
-            margin: 0 14px;
-            font-weight: bold;
-            color: #29825d;
+
+        .toolbar {
+            background: #c0c0c0;
+            border-bottom: 2px solid #000;
+            border-top: 2px solid #fff;
+            padding: 4px;
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
         }
+
+        .tool-group {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            border: 1px solid #000;
+            border-top-color: #fff;
+            border-left-color: #fff;
+            background: #c0c0c0;
+            padding: 4px;
+        }
+
+        button, .tool-btn {
+            width: 48px;
+            height: 48px;
+            background: #c0c0c0;
+            border: 2px solid;
+            border-color: #fff #000 #000 #fff;
+            font-size: 20px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        button:active, .tool-btn.active {
+            border-color: #000 #fff #fff #000;
+            background: #808080;
+            color: white;
+        }
+
         #canvas-container {
             flex: 1;
+            background: 
+                linear-gradient(45deg, #808080 25%, transparent 25%) 0 0 / 16px 16px,
+                linear-gradient(45deg, transparent 75%, #808080 75%) 8px 8px / 16px 16px,
+                #c0c0c0; /* subtle dither */
             position: relative;
-            background: #f0f0f0;
-            overflow: hidden;
+            border: 2px inset #fff;
+            border-top-color: #000;
+            border-left-color: #000;
         }
+
         #canvas {
             position: absolute;
-            top: 0; left: 0;
+            inset: 0;
             width: 100%;
             height: 100%;
             background: white;
-            box-shadow: 0 6px 20px rgba(0,0,0,0.35);
+            image-rendering: pixelated;
             cursor: crosshair;
             touch-action: none;
         }
-        #canvas.eraser-cursor {
-            cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32"><circle cx="16" cy="16" r="14" fill="white" stroke="black" stroke-width="2"/><text x="16" y="22" font-size="18" text-anchor="middle" fill="black">🧽</text></svg>') 16 16, auto;
+
+        .color-palette {
+            background: #c0c0c0;
+            border-top: 2px solid #000;
+            padding: 6px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px;
+            justify-content: center;
         }
-        button {
-            padding: 9px 16px;
-            margin: 4px 6px;
-            background: #29825d;
-            color: white;
-            border: none;
-            border-radius: 6px;
+
+        .color-swatch {
+            width: 24px;
+            height: 24px;
+            border: 2px solid #000;
             cursor: pointer;
-            font-weight: bold;
-            transition: 0.2s;
-            min-width: 80px;
         }
-        button:hover {
-            background: #1f6245;
+
+        .status-bar {
+            background: #c0c0c0;
+            border-top: 2px solid #fff;
+            padding: 4px 8px;
+            font-size: 11px;
+            color: #000;
         }
-        button.active {
-            background: #A8DF8E;
-            color: #1a3c2e;
-        }
+
         footer {
             text-align: center;
-            padding: 12px;
+            padding: 6px;
+            background: #000080;
             color: white;
-            font-size: 0.95em;
-            background: rgba(0,0,0,0.25);
+            font-size: 11px;
         }
     </style>
 </head>
 <body>
-    <header>
-        <img id="logo" src="https://i.ibb.co/21Szz69V/Brush-Up.png" alt="Brush Up - ZEST Logo">
-    </header>
-    <div id="toolbar">
-        <label>Color: <input type="color" id="colorPicker" value="#A8DF8E"></label>
-        <label>Size: <input type="range" id="brushSize" min="1" max="60" value="6"></label>
-        <button id="penBtn" class="active">✏️ Pen</button>
-        <button id="eraserBtn">🧽 Eraser</button>
-        <button id="undoBtn">↺ Undo</button>
-        <button id="redoBtn">↻ Redo</button>
-        <button id="clearBtn">🗑️ Clear</button>
-        <button id="saveBtn">💾 Save</button>
+
+    <div class="window">
+        <div class="title-bar">
+            <h1>Untitled - ZEST Paint</h1>
+            <div class="buttons">
+                <div class="btn-window">_</div>
+                <div class="btn-window">□</div>
+                <div class="btn-window">×</div>
+            </div>
+        </div>
+
+        <div class="toolbar">
+            <div class="tool-group">
+                <button id="penBtn" class="tool-btn active" title="Pencil">✏️</button>
+                <button id="eraserBtn" class="tool-btn" title="Eraser">🧽</button>
+            </div>
+            <div class="tool-group">
+                <button id="undoBtn" title="Undo">↺</button>
+                <button id="redoBtn" title="Redo">↻</button>
+            </div>
+            <div class="tool-group">
+                <button id="clearBtn" title="Clear">🗑️</button>
+                <button id="saveBtn" title="Save">💾</button>
+            </div>
+            <label title="Brush Size">
+                Size: <input type="range" id="brushSize" min="1" max="40" value="4" style="width:120px;">
+            </label>
+        </div>
+
+        <div id="canvas-container">
+            <canvas id="canvas"></canvas>
+        </div>
+
+        <div class="color-palette">
+            <!-- Classic Windows 95 / MS Paint 20-color palette -->
+            <div class="color-swatch" style="background:#000000;" data-color="#000000"></div>
+            <div class="color-swatch" style="background:#808080;" data-color="#808080"></div>
+            <div class="color-swatch" style="background:#C0C0C0;" data-color="#C0C0C0"></div>
+            <div class="color-swatch" style="background:#FFFFFF;" data-color="#FFFFFF"></div>
+            <div class="color-swatch" style="background:#800000;" data-color="#800000"></div>
+            <div class="color-swatch" style="background:#FF0000;" data-color="#FF0000"></div>
+            <div class="color-swatch" style="background:#808000;" data-color="#808000"></div>
+            <div class="color-swatch" style="background:#FFFF00;" data-color="#FFFF00"></div>
+            <div class="color-swatch" style="background:#008000;" data-color="#008000"></div>
+            <div class="color-swatch" style="background:#00FF00;" data-color="#00FF00"></div>
+            <div class="color-swatch" style="background:#008080;" data-color="#008080"></div>
+            <div class="color-swatch" style="background:#00FFFF;" data-color="#00FFFF"></div>
+            <div class="color-swatch" style="background:#000080;" data-color="#000080"></div>
+            <div class="color-swatch" style="background:#0000FF;" data-color="#0000FF"></div>
+            <div class="color-swatch" style="background:#800080;" data-color="#800080"></div>
+            <div class="color-swatch" style="background:#FF00FF;" data-color="#FF00FF"></div>
+            <div class="color-swatch" style="background:#A0522D;" data-color="#A0522D"></div>
+            <div class="color-swatch" style="background:#D2691E;" data-color="#D2691E"></div>
+            <div class="color-swatch" style="background:#F4A460;" data-color="#F4A460"></div>
+            <div class="color-swatch" style="background:#FFD700;" data-color="#FFD700"></div>
+        </div>
+
+        <div class="status-bar">
+            For Pooja • Retro ZEST Paint • Use mouse or touch to draw
+        </div>
     </div>
-    <div id="canvas-container">
-        <canvas id="canvas"></canvas>
-    </div>
-    <footer>
-        Made with ❤️ for Pooja
-    </footer>
+
+    <footer>Made with ❤️ in 90s style for Pooja</footer>
 
     <script>
         const canvas = document.getElementById('canvas');
         const ctx = canvas.getContext('2d');
-        const colorPicker = document.getElementById('colorPicker');
         const brushSize = document.getElementById('brushSize');
         const penBtn = document.getElementById('penBtn');
         const eraserBtn = document.getElementById('eraserBtn');
@@ -125,26 +247,19 @@
         let painting = false;
         let isEraser = false;
         let history = [];
-        let historyIndex = -1;  // -1 means at latest state
-        const MAX_HISTORY = 30;
+        let historyIndex = -1;
+        const MAX_HISTORY = 25;
 
         function resizeCanvas() {
-            // Save current drawing state
-            const currentState = canvas.toDataURL();
-
-            // Resize
+            const current = canvas.toDataURL();
             canvas.width = canvas.offsetWidth;
             canvas.height = canvas.offsetHeight;
 
-            // Restore previous content (scaled to fit new size)
-            if (history.length > 0 || currentState) {
+            if (current && history.length > 0) {
                 const img = new Image();
-                img.src = currentState;
-                img.onload = () => {
-                    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-                };
+                img.src = current;
+                img.onload = () => ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
             } else {
-                // First time / cleared canvas
                 ctx.fillStyle = 'white';
                 ctx.fillRect(0, 0, canvas.width, canvas.height);
             }
@@ -154,21 +269,16 @@
         resizeCanvas();
 
         function saveState() {
-            // Remove any future states (redo becomes invalid after new action)
             if (historyIndex < history.length - 1) {
                 history = history.slice(0, historyIndex + 1);
             }
-
             history.push(canvas.toDataURL());
-            if (history.length > MAX_HISTORY) {
-                history.shift();
-            }
+            if (history.length > MAX_HISTORY) history.shift();
             historyIndex = history.length - 1;
         }
 
         function draw(e) {
             if (!painting) return;
-
             const rect = canvas.getBoundingClientRect();
             const x = (e.clientX || (e.touches && e.touches[0].clientX)) - rect.left;
             const y = (e.clientY || (e.touches && e.touches[0].clientY)) - rect.top;
@@ -179,10 +289,8 @@
 
             if (isEraser) {
                 ctx.globalCompositeOperation = 'destination-out';
-                ctx.strokeStyle = '#000000'; // doesn't matter for erase
             } else {
                 ctx.globalCompositeOperation = 'source-over';
-                ctx.strokeStyle = colorPicker.value;
             }
 
             ctx.lineTo(x, y);
@@ -194,13 +302,14 @@
         function startDrawing(e) {
             e.preventDefault();
             painting = true;
-
             const rect = canvas.getBoundingClientRect();
             const x = (e.clientX || (e.touches && e.touches[0].clientX)) - rect.left;
             const y = (e.clientY || (e.touches && e.touches[0].clientY)) - rect.top;
 
             ctx.beginPath();
             ctx.moveTo(x, y);
+
+            if (!isEraser) ctx.strokeStyle = e.target.dataset?.color || '#000000';
             draw(e);
         }
 
@@ -212,32 +321,32 @@
             }
         }
 
-        // Mouse events
         canvas.addEventListener('mousedown', startDrawing);
         canvas.addEventListener('mousemove', draw);
         canvas.addEventListener('mouseup', endDrawing);
         canvas.addEventListener('mouseout', endDrawing);
-
-        // Touch events
         canvas.addEventListener('touchstart', startDrawing);
         canvas.addEventListener('touchmove', draw);
         canvas.addEventListener('touchend', endDrawing);
         canvas.addEventListener('touchcancel', endDrawing);
 
-        // Tool selection
         penBtn.addEventListener('click', () => {
             isEraser = false;
             penBtn.classList.add('active');
             eraserBtn.classList.remove('active');
-            canvas.classList.remove('eraser-cursor');
-            colorPicker.value = '#A8DF8E';
         });
 
         eraserBtn.addEventListener('click', () => {
             isEraser = true;
             eraserBtn.classList.add('active');
             penBtn.classList.remove('active');
-            canvas.classList.add('eraser-cursor');
+        });
+
+        document.querySelectorAll('.color-swatch').forEach(swatch => {
+            swatch.addEventListener('click', (e) => {
+                ctx.strokeStyle = e.target.dataset.color;
+                penBtn.click(); // switch to pen when picking color
+            });
         });
 
         undoBtn.addEventListener('click', () => {
@@ -247,7 +356,7 @@
                 img.src = history[historyIndex];
                 img.onload = () => {
                     ctx.clearRect(0, 0, canvas.width, canvas.height);
-                    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                    ctx.drawImage(img, 0, 0);
                 };
             }
         });
@@ -259,30 +368,32 @@
                 img.src = history[historyIndex];
                 img.onload = () => {
                     ctx.clearRect(0, 0, canvas.width, canvas.height);
-                    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                    ctx.drawImage(img, 0, 0);
                 };
             }
         });
 
         clearBtn.addEventListener('click', () => {
-            if (confirm("Clear the entire canvas? This will reset undo history.")) {
-                ctx.globalCompositeOperation = 'source-over';
+            if (confirm("Clear canvas?")) {
                 ctx.fillStyle = 'white';
                 ctx.fillRect(0, 0, canvas.width, canvas.height);
                 history = [];
                 historyIndex = -1;
-                saveState(); // save the cleared state
+                saveState();
             }
         });
 
         saveBtn.addEventListener('click', () => {
             const link = document.createElement('a');
-            link.download = `zest-drawing-${new Date().toISOString().slice(0,10)}.png`;
-            link.href = canvas.toDataURL('image/png');
+            link.download = `zest-retro-paint-${new Date().toISOString().slice(0,10)}.png`;
+            link.href = canvas.toDataURL();
             link.click();
         });
 
-        // Initialize
+        // Start with blank canvas & save initial state
+        ctx.fillStyle = 'white';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.strokeStyle = '#000000'; // default black
         saveState();
     </script>
 </body>
